@@ -6,7 +6,7 @@ services:
     plan: free
 
     # Build: install deps (including devDeps for tsx/vite) then compile
-    buildCommand: npm install && npm run build
+    buildCommand: npm install --include=dev && npm run build
 
     # Start: run the pre-compiled production bundle
     startCommand: node dist/index.cjs
