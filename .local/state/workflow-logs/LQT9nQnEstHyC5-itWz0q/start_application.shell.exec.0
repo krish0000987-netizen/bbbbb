@@ -1,0 +1,38 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+[1G[0K[timezone] Could not write sitecustomize.py: Error: EACCES: permission denied, open '/nix/store/6334pjf6w2q623rgvwi499qaiym1p6yv-python3-3.11.14/lib/python3.11/site-packages/sitecustomize.py'
+[90m    at Object.writeFileSync (node:fs:2380:20)[39m
+    at installISTTimezone [90m(/home/runner/workspace/[39mserver/index.ts:16:8[90m)[39m
+    at <anonymous> [90m(/home/runner/workspace/[39mserver/index.ts:98:3[90m)[39m
+    at <anonymous> [90m(/home/runner/workspace/[39mserver/index.ts:140:1[90m)[39m
+[90m    at ModuleJob.run (node:internal/modules/esm/module_job:325:25)[39m
+[90m    at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)[39m
+[90m    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)[39m {
+  errno: [33m-13[39m,
+  code: [32m'EACCES'[39m,
+  syscall: [32m'open'[39m,
+  path: [32m'/nix/store/6334pjf6w2q623rgvwi499qaiym1p6yv-python3-3.11.14/lib/python3.11/site-packages/sitecustomize.py'[39m
+}
+node:events:502
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use 0.0.0.0:5000
+[90m    at Server.setupListenHandle [as _listen2] (node:net:1908:16)[39m
+[90m    at listenInCluster (node:net:1965:12)[39m
+[90m    at doListen (node:net:2139:7)[39m
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:83:21)[39m
+Emitted 'error' event on Server instance at:
+[90m    at emitErrorNT (node:net:1944:8)[39m
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:82:21)[39m {
+  code: [32m'EADDRINUSE'[39m,
+  errno: [33m-98[39m,
+  syscall: [32m'listen'[39m,
+  address: [32m'0.0.0.0'[39m,
+  port: [33m5000[39m
+}
+
+Node.js v20.20.0
+[1G[0K⠙[1G[0K

@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: brilliant-bulls
+    runtime: node
+    region: singapore   # Closest to India — lowest latency
+    plan: free
+
+    # Build: install deps (including devDeps for tsx/vite) then compile
+    buildCommand: npm install && npm run build
+
+    # Start: run the pre-compiled production bundle
+    startCommand: node dist/index.cjs
+
+    # Health check — Render pings this to know the app is alive
+    healthCheckPath: /api/health
+
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+      # Set these manually in Render dashboard → Environment
+      - key: DATABASE_URL
+        sync: false       # You paste your NeonDB URL here
+
+      - key: SESSION_SECRET
+        generateValue: true   # Render auto-generates a secure random string

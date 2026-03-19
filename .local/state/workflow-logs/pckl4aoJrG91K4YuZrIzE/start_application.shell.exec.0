@@ -1,0 +1,25 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+[1G[0K[timezone] Could not write sitecustomize.py: Error: EACCES: permission denied, open '/nix/store/6334pjf6w2q623rgvwi499qaiym1p6yv-python3-3.11.14/lib/python3.11/site-packages/sitecustomize.py'
+[90m    at Object.writeFileSync (node:fs:2380:20)[39m
+    at installISTTimezone [90m(/home/runner/workspace/[39mserver/index.ts:16:8[90m)[39m
+    at <anonymous> [90m(/home/runner/workspace/[39mserver/index.ts:98:3[90m)[39m
+    at <anonymous> [90m(/home/runner/workspace/[39mserver/index.ts:140:1[90m)[39m
+[90m    at ModuleJob.run (node:internal/modules/esm/module_job:325:25)[39m
+[90m    at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)[39m
+[90m    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)[39m {
+  errno: [33m-13[39m,
+  code: [32m'EACCES'[39m,
+  syscall: [32m'open'[39m,
+  path: [32m'/nix/store/6334pjf6w2q623rgvwi499qaiym1p6yv-python3-3.11.14/lib/python3.11/site-packages/sitecustomize.py'[39m
+}
+6:22:06 PM [express] serving on port 5000
+
+A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+6:22:10 PM [express] GET /api/auth/user 401 in 2ms :: {"message":"Unauthorized"}
+6:22:17 PM [express] GET /api/auth/user 401 in 0ms :: {"message":"Unauthorized"}
+6:23:15 PM [express] GET /api/auth/user 401 in 1ms :: {"message":"Unauthorized"}
+6:44:16 PM [express] GET /api/auth/user 401 in 1ms :: {"message":"Unauthorized"}
+6:44:42 PM [express] GET /api/auth/user 401 in 0ms :: {"message":"Unauthorized"}
