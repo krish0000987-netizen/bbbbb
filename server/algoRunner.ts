@@ -207,6 +207,10 @@ class AlgoRunner {
     const userDir = this.getUserAlgoDir();
     if (!fs.existsSync(userDir)) fs.mkdirSync(userDir, { recursive: true });
 
+    // Local packages directory for cloud environments like Render
+    const libDir = path.join(process.cwd(), "server", "algo", "python_packages");
+    if (!fs.existsSync(libDir)) fs.mkdirSync(libDir, { recursive: true });
+
     // Copy latest shared script into user's isolated directory
     const scriptName = path.basename(sharedScript);
     const userScriptPath = path.join(userDir, scriptName);
@@ -244,6 +248,7 @@ class AlgoRunner {
           ...process.env,
           PYTHONUNBUFFERED: "1",
           PYTHONIOENCODING: "utf-8",
+          PYTHONPATH: path.join(process.cwd(), "server", "algo", "python_packages"),
           TZ: "Asia/Kolkata",
           ALGO_CONFIG_PATH: algoConfigPath,
           CONFIG_FILE: algoConfigPath,
@@ -381,9 +386,12 @@ class AlgoManager {
     const failed: string[] = [];
     const skipped: string[] = [];
 
+    const libDir = path.join(process.cwd(), "server", "algo", "python_packages");
+    if (!fs.existsSync(libDir)) fs.mkdirSync(libDir, { recursive: true });
+
     for (const pkg of packages) {
       const result = await new Promise<{ success: boolean; output: string }>((resolve) => {
-        const proc = spawn("python3", ["-m", "pip", "install", "-q", pkg], {
+        const proc = spawn("python3", ["-m", "pip", "install", "--target", libDir, "-q", pkg], {
           env: { ...process.env },
           stdio: ["ignore", "pipe", "pipe"],
         });
