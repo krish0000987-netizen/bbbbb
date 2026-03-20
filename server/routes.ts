@@ -654,7 +654,10 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.post("/api/admin/subscriptions/:userId", isAuthenticated, isAdmin, async (req: AuthRequest, res: Response) => {
     try {
-      const userId = req.params.userId;
+      const userIdParam = req.params.userId;
+      const userId = Array.isArray(userIdParam) ? userIdParam[0] : userIdParam;
+      if (!userId) return res.status(400).json({ message: "UserId is required" });
+
       const { plan, days } = req.body;
 
       const planMap: Record<string, { defaultDays: number; amount: number }> = {
@@ -697,14 +700,18 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       });
       await logAudit(getUserId(req), `Admin assigned ${plan} subscription to user ${userId}`, "admin", req);
       res.json(sub);
-    } catch {
+    } catch (err: any) {
+      console.error("Subscription assign error:", err);
       res.status(500).json({ message: "Internal server error" });
     }
   });
 
   app.post("/api/admin/subscriptions/:userId/terminate", isAuthenticated, isAdmin, async (req: AuthRequest, res: Response) => {
     try {
-      const userId = req.params.userId;
+      const userIdParam = req.params.userId;
+      const userId = Array.isArray(userIdParam) ? userIdParam[0] : userIdParam;
+      if (!userId) return res.status(400).json({ message: "UserId is required" });
+
       const sub = await storage.getSubscription(userId);
       if (!sub) return res.status(404).json({ message: "No subscription found" });
 

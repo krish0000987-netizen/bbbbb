@@ -12,15 +12,16 @@ declare module "express-session" {
   }
 }
 
+import createMemoryStore from "memorystore";
+
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000;
-  const pgStore = connectPg(session);
-  const sessionStore = new pgStore({
-    conString: process.env.DATABASE_URL,
-    createTableIfMissing: true,
-    ttl: sessionTtl,
-    tableName: "sessions",
+  const MemoryStore = createMemoryStore(session);
+  const sessionStore = new MemoryStore({
+    checkPeriod: 86400000, // prune expired entries every 24h
   });
+  
+  console.log(`[auth-debug] Session store switched to MemoryStore for reliability.`);
   return session({
     secret: process.env.SESSION_SECRET!,
     store: sessionStore,
@@ -72,8 +73,18 @@ export async function setupAuth(app: Express) {
       }
 
       req.session.userId = finalUser.id;
-      const { password: _, ...safeUser } = finalUser;
-      res.json(safeUser);
+      console.log(`[auth-debug] Login successful for user: ${finalUser.username}, session userId set to: ${req.session.userId}`);
+      
+      // Force save session to handle some race conditions
+      req.session.save((err) => {
+        if (err) {
+          console.error(`[auth-debug] Session save error:`, err);
+          return res.status(500).json({ message: "Login failed (session error)" });
+        }
+        console.log(`[auth-debug] Session saved successfully for user: ${finalUser.username}`);
+        const { password: _, ...safeUser } = finalUser;
+        res.json(safeUser);
+      });
     } catch (error) {
       console.error("Login error:", error);
       res.status(500).json({ message: "Login failed" });
@@ -98,7 +109,9 @@ export async function setupAuth(app: Express) {
 }
 
 export const isAuthenticated: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
+  console.log(`[auth-debug] Request ${req.method} ${req.path} - Session ID: ${req.sessionID} - User ID: ${req.session.userId}`);
   if (!req.session.userId) {
+    console.log(`[auth-debug] No userId in session for ${req.path}`);
     return res.status(401).json({ message: "Unauthorized" });
   }
 

@@ -8,15 +8,22 @@ import { storage } from "./storage";
 // Handles format: 2026-03-17 14:49:40,569  →  2026-03-17 20:19:40,569
 // Works regardless of what logging library the Python script uses.
 function convertUTCToIST(line: string): string {
+  // Matches: 2026-03-20 03:33:16,365 or 2026-03-20 03:33:16
   return line.replace(
     /(\d{4}-\d{2}-\d{2}) (\d{2}):(\d{2}):(\d{2})(,\d{3})?/g,
     (_match, date, hh, mm, ss, ms) => {
-      const totalMinutes = parseInt(hh) * 60 + parseInt(mm) + 5 * 60 + 30;
-      const istH = Math.floor(totalMinutes / 60) % 24;
-      const istM = totalMinutes % 60;
-      const h = String(istH).padStart(2, "0");
-      const m = String(istM).padStart(2, "0");
-      return `${date} ${h}:${m}:${ss}${ms || ""}`;
+      const dateObj = new Date(`${date}T${hh}:${mm}:${ss}Z`);
+      if (isNaN(dateObj.getTime())) return _match;
+      
+      // Add 5 hours 30 mins
+      const istDate = new Date(dateObj.getTime() + (5.5 * 60 * 60 * 1000));
+      
+      const h = String(istDate.getUTCHours()).padStart(2, "0");
+      const m = String(istDate.getUTCMinutes()).padStart(2, "0");
+      const s = String(istDate.getUTCSeconds()).padStart(2, "0");
+      
+      // We use getUTCHours/Minutes because we manually added the offset to the timestamp
+      return `${date} ${h}:${m}:${s}${ms || ""}`;
     }
   );
 }
@@ -250,14 +257,14 @@ class AlgoRunner {
       this.process.stdout?.on("data", (data: Buffer) => {
         for (const line of data.toString("utf-8").split("\n")) {
           const trimmed = line.trim();
-          if (trimmed) this.addLog("stdout", convertUTCToIST(trimmed));
+          if (trimmed) this.addLog("stdout", trimmed);
         }
       });
 
       this.process.stderr?.on("data", (data: Buffer) => {
         for (const line of data.toString("utf-8").split("\n")) {
           const trimmed = line.trim();
-          if (trimmed) this.addLog("stderr", convertUTCToIST(trimmed));
+          if (trimmed) this.addLog("stderr", trimmed);
         }
       });
 
