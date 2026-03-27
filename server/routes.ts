@@ -238,6 +238,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const { password: _, ...safeUser } = user;
       res.json(safeUser);
     } catch (err: any) {
+      console.error("Registration error:", err);
       res.status(500).json({ message: "Registration failed. Please try again." });
     }
   });
