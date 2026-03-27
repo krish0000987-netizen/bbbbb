@@ -13,6 +13,9 @@ interface AuthContextType {
   isRegistering: boolean;
   logout: () => void;
   isLoggingOut: boolean;
+  adminSetup: (data: { username: string; password: string; secret: string; email?: string; firstName?: string; lastName?: string; phone?: string }) => Promise<User>;
+  isAdminSettingUp: boolean;
+  adminSetupError: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -32,6 +35,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isRegistering: auth.isRegistering,
       logout: auth.logout,
       isLoggingOut: auth.isLoggingOut,
+      adminSetup: auth.adminSetup,
+      isAdminSettingUp: auth.isAdminSettingUp,
+      adminSetupError: auth.adminSetupError,
     }}>
       {children}
     </AuthContext.Provider>

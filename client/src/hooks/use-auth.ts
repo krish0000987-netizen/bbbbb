@@ -49,6 +49,22 @@ async function registerFn(data: { username: string; password: string; firstName?
   return response.json();
 }
 
+async function adminSetupFn(data: { username: string; password: string; secret: string; email?: string; firstName?: string; lastName?: string; phone?: string }): Promise<User> {
+  const response = await fetch("/api/admin/setup", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.message || "Admin setup failed");
+  }
+
+  return response.json();
+}
+
 async function logoutFn(): Promise<void> {
   await fetch("/api/logout", { method: "POST", credentials: "include" });
 }
@@ -83,6 +99,13 @@ export function useAuth() {
     },
   });
 
+  const adminSetupMutation = useMutation({
+    mutationFn: adminSetupFn,
+    onSuccess: (data) => {
+      queryClient.setQueryData(["/api/auth/user"], data);
+    },
+  });
+
   return {
     user,
     isLoading,
@@ -95,5 +118,8 @@ export function useAuth() {
     isRegistering: registerMutation.isPending,
     logout: logoutMutation.mutate,
     isLoggingOut: logoutMutation.isPending,
+    adminSetup: adminSetupMutation.mutateAsync,
+    isAdminSettingUp: adminSetupMutation.isPending,
+    adminSetupError: adminSetupMutation.error?.message || null,
   };
 }

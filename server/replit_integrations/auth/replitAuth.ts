@@ -1,18 +1,16 @@
 import session from "express-session";
 import type { Express, RequestHandler, Request, Response, NextFunction } from "express";
-import connectPg from "connect-pg-simple";
 import bcrypt from "bcrypt";
 import { db } from "../../db";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
+import createMemoryStore from "memorystore";
 
 declare module "express-session" {
   interface SessionData {
     userId?: string;
   }
 }
-
-import createMemoryStore from "memorystore";
 
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000;
@@ -67,7 +65,8 @@ export async function setupAuth(app: Express) {
         const allUsers = await db.select().from(users);
         const hasAdmin = allUsers.some(u => u.role === "admin");
         if (!hasAdmin) {
-          const [promoted] = await db.update(users).set({ role: "admin" }).where(eq(users.id, user.id)).returning();
+          await db.update(users).set({ role: "admin" }).where(eq(users.id, user.id));
+          const [promoted] = await db.select().from(users).where(eq(users.id, user.id));
           if (promoted) finalUser = promoted;
         }
       }

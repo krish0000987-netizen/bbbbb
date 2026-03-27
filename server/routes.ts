@@ -168,6 +168,47 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   }
 
+  app.post("/api/admin/setup", async (req: Request, res: Response) => {
+    try {
+      const { username, password, secret, email, firstName, lastName, phone } = req.body;
+      
+      // Basic validation
+      if (!username || !password || !secret) {
+        return res.status(400).json({ message: "Username, password and secret key are required" });
+      }
+
+      // Check secret key from env or default
+      const ADMIN_SECRET = process.env.ADMIN_SECRET || "000999";
+      if (secret !== ADMIN_SECRET) {
+        return res.status(403).json({ message: "Invalid secret key" });
+      }
+
+      const existing = await storage.getUserByUsername(username);
+      if (existing) {
+        return res.status(400).json({ message: "Username already taken" });
+      }
+
+      const user = await storage.createUser({ 
+        username, 
+        password, 
+        email: email || null, 
+        firstName: firstName || null, 
+        lastName: lastName || null, 
+        phone: phone || null, 
+        role: "admin",
+        isActive: true 
+      });
+
+      await logAudit(user.id, "Admin user created via setup page", "admin", req);
+      
+      const { password: _, ...safeUser } = user;
+      res.json(safeUser);
+    } catch (err: any) {
+      console.error("Admin setup error:", err);
+      res.status(500).json({ message: "Admin setup failed." });
+    }
+  });
+
   // ── Public Sign Up ───────────────────────────────────────────────────
   app.post("/api/register", loginLimiter, async (req: Request, res: Response) => {
     try {

@@ -25,6 +25,7 @@ import AdminDashboardPage from "@/pages/admin-dashboard";
 import AdminUsersPage from "@/pages/admin-users";
 import AdminLogsPage from "@/pages/admin-logs";
 import AlgoUploadPage from "@/pages/algo-upload";
+import AdminSetupPage from "@/pages/admin-setup";
 import { useEffect } from "react";
 
 function RedirectTo({ to }: { to: string }) {
@@ -337,6 +338,7 @@ function AppRoutes() {
         <Route path="/">{() => <LandingPage />}</Route>
         <Route path="/login">{() => <LoginPage />}</Route>
         <Route path="/signup">{() => <SignUpPage />}</Route>
+        <Route path="/admin-setup">{() => <AdminSetupPage />}</Route>
         <Route>{() => <RedirectTo to="/" />}</Route>
       </Switch>
     );

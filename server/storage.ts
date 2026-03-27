@@ -17,11 +17,12 @@ import {
 import { db } from "./db";
 import { eq, and, desc, sql } from "drizzle-orm";
 import bcrypt from "bcrypt";
+import { v4 as uuidv4 } from "uuid";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(data: { username: string; password: string; email?: string; firstName?: string; lastName?: string; phone?: string; role?: string }): Promise<User>;
+  createUser(data: { username: string; password: string; email?: string; firstName?: string; lastName?: string; phone?: string; role?: string; isActive?: boolean }): Promise<User>;
   updateUser(id: string, updates: Partial<User>): Promise<User | undefined>;
   getAllUsers(): Promise<User[]>;
 
@@ -66,9 +67,11 @@ export class DatabaseStorage implements IStorage {
     return user || undefined;
   }
 
-  async createUser(data: { username: string; password: string; email?: string; firstName?: string; lastName?: string; phone?: string; role?: string }): Promise<User> {
+  async createUser(data: { username: string; password: string; email?: string; firstName?: string; lastName?: string; phone?: string; role?: string; isActive?: boolean }): Promise<User> {
     const hashedPassword = await bcrypt.hash(data.password, 10);
-    const [user] = await db.insert(users).values({
+    const id = uuidv4();
+    await db.insert(users).values({
+      id,
       username: data.username,
       password: hashedPassword,
       email: data.email || null,
@@ -76,13 +79,16 @@ export class DatabaseStorage implements IStorage {
       lastName: data.lastName || null,
       phone: data.phone || null,
       role: data.role || "user",
-    }).returning();
+      isActive: data.isActive !== undefined ? data.isActive : true,
+    });
+    const user = await this.getUser(id);
+    if (!user) throw new Error("Failed to create user");
     return user;
   }
 
   async updateUser(id: string, updates: Partial<User>): Promise<User | undefined> {
-    const [user] = await db.update(users).set({ ...updates, updatedAt: new Date() }).where(eq(users.id, id)).returning();
-    return user || undefined;
+    await db.update(users).set({ ...updates, updatedAt: new Date() }).where(eq(users.id, id));
+    return this.getUser(id);
   }
 
   async getAllUsers(): Promise<User[]> {
@@ -90,7 +96,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createDevice(data: Omit<Device, "id" | "createdAt">): Promise<Device> {
-    const [device] = await db.insert(devices).values(data).returning();
+    const id = uuidv4();
+    await db.insert(devices).values({ ...data, id });
+    const [device] = await db.select().from(devices).where(eq(devices.id, id));
     return device;
   }
 
@@ -115,7 +123,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createAuditLog(data: Omit<AuditLog, "id" | "createdAt">): Promise<AuditLog> {
-    const [log] = await db.insert(auditLogs).values(data).returning();
+    const id = uuidv4();
+    await db.insert(auditLogs).values({ ...data, id });
+    const [log] = await db.select().from(auditLogs).where(eq(auditLogs.id, id));
     return log;
   }
 
@@ -145,7 +155,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createCredential(data: Omit<EncryptedCredential, "id" | "createdAt" | "updatedAt">): Promise<EncryptedCredential> {
-    const [cred] = await db.insert(encryptedCredentials).values(data).returning();
+    const id = uuidv4();
+    await db.insert(encryptedCredentials).values({ ...data, id });
+    const cred = await this.getCredential(id);
+    if (!cred) throw new Error("Failed to create credential");
     return cred;
   }
 
@@ -163,7 +176,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createCsvConfig(data: Omit<CsvConfig, "id" | "createdAt" | "updatedAt">): Promise<CsvConfig> {
-    const [config] = await db.insert(csvConfigs).values(data).returning();
+    const id = uuidv4();
+    await db.insert(csvConfigs).values({ ...data, id });
+    const config = await this.getCsvConfig(id);
+    if (!config) throw new Error("Failed to create config");
     return config;
   }
 
@@ -186,12 +202,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createSubscription(data: Omit<Subscription, "id" | "createdAt" | "updatedAt">): Promise<Subscription> {
-    const [sub] = await db.insert(subscriptions).values(data).returning();
+    const id = uuidv4();
+    await db.insert(subscriptions).values({ ...data, id });
+    const sub = await this.getSubscription(data.userId); // This might return a different one if multiple exist, but usually okay
+    if (!sub) throw new Error("Failed to create subscription");
     return sub;
   }
 
   async updateSubscription(id: string, updates: Partial<Subscription>): Promise<Subscription | undefined> {
-    const [sub] = await db.update(subscriptions).set({ ...updates, updatedAt: new Date() }).where(eq(subscriptions.id, id)).returning();
+    await db.update(subscriptions).set({ ...updates, updatedAt: new Date() }).where(eq(subscriptions.id, id));
+    const [sub] = await db.select().from(subscriptions).where(eq(subscriptions.id, id));
     return sub || undefined;
   }
 
